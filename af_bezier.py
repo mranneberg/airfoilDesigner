@@ -210,7 +210,7 @@ def pointsByArcLength(P,SU):
         # Get arclength
         S0 = np.sum(dSarr[0:(i*sub+j)])
         
-        # Arclen by other means
+        # Arclen by numeric integration
         ts = findArcLenNumeric(PP[j][0],PP[j][1],PP[j][2],PP[j][3],s-S0,ts)
         ts = min(ts,1.0)
         
@@ -468,8 +468,5 @@ def repanelArclength(S,Curvature,X,N,LEFAC,TEFAC,KAPFAC):
         print("Not Converged"+str(converged))
     
     SR = (SR+SRUP)*0.5
-
-    if converged<1:
-        print("Not Converged"+str(converged)+"iter "+str(it))
     
     return SR

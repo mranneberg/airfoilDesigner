@@ -5,7 +5,7 @@ import numpy as np
 def viiflowPolar(X,aoarange,RE=1e6,ncrit=9.0,Mach=0.0):
     # Settings
     Mach = 0.0
-    s = vf.setup(RE,Mach,ncrit,aoarange[0])
+    s = vf.setup(Re=RE,Ma=Mach,ncrit=ncrit,alpha=aoarange[0])
     # Internal iterations
     s.itermax = 100
     s.silent=True
@@ -38,7 +38,7 @@ def viiflowPolar(X,aoarange,RE=1e6,ncrit=9.0,Mach=0.0):
             grad = None
 
             # Run viiflow
-            [x,flag,res,grad,_,_,_,_,_,_] = vf.iter(x,bl,p,s,res,grad)
+            [x,flag,res,grad,_] = vf.iter(x,bl,p,s,res,grad)
 
             # If converged add to cl/cd vectors (could check flag as well, but this allows custom tolerance to use the results anyways)
             if np.sqrt(np.dot(res.T,res))<1e-3:
@@ -47,13 +47,13 @@ def viiflowPolar(X,aoarange,RE=1e6,ncrit=9.0,Mach=0.0):
                     alv.append(alpha)
                     clv.append(p.CL)
                     cmv.append(p.CM)
-                    cdv.append(bl[0].CD[0])
+                    cdv.append(bl[0].CD)
                     print('AL: %f CL: %f CD: %f' % (alpha,clv[-1],cdv[-1]))
                 else:
                     alv.insert(0,alpha)
                     clv.insert(0,p.CL)
                     cmv.insert(0,p.CM)
-                    cdv.insert(0,bl[0].CD[0])
+                    cdv.insert(0,bl[0].CD)
                     print('AL: %f CL: %f CD: %f' % (alpha,clv[0],cdv[0]))
                 
             else:
@@ -62,4 +62,4 @@ def viiflowPolar(X,aoarange,RE=1e6,ncrit=9.0,Mach=0.0):
                     break
                 init = True
     
-    return (alv,clv,cdv,cmv)
+    return (alv,clv,cdv,cmv,bl,p)
