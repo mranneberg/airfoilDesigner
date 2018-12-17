@@ -48,17 +48,18 @@ def viiflowPolar(X,aoarange,RE=1e6,ncrit=9.0,Mach=0.0):
                     clv.append(p.CL)
                     cmv.append(p.CM)
                     cdv.append(bl[0].CD)
-                    print('AL: %f CL: %f CD: %f' % (alpha,clv[-1],cdv[-1]))
+                    #print('AL: %f CL: %f CD: %f' % (alpha,clv[-1],cdv[-1]))
                 else:
                     alv.insert(0,alpha)
                     clv.insert(0,p.CL)
                     cmv.insert(0,p.CM)
                     cdv.insert(0,bl[0].CD)
-                    print('AL: %f CL: %f CD: %f' % (alpha,clv[0],cdv[0]))
+                    #print('AL: %f CL: %f CD: %f' % (alpha,clv[0],cdv[0]))
                 
             else:
                 failed += 1
                 if failed>=3:
+                    print("Exiting after three failed AOA")
                     break
                 init = True
     
