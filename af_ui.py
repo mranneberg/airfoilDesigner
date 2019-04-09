@@ -13,7 +13,7 @@ def bezierPlot(ax,P):
     plt.plot([P[11,0],P[12,0]],[P[11,1],P[12,1]],"o-b",color="#AAAAAA")
 
 def savePoints(filename,X,name):
-    np.savetxt(filename, X[:,::-1].T, fmt='  %1.8f  %1.8f', newline='\n', header=name,comments='')
+    np.savetxt(filename, X.T, fmt='  %1.8f  %1.8f', newline='\n', header=name,comments='')
 
 
 # These Parameters define the discretization
@@ -21,3 +21,8 @@ N=widgets.FloatLogSlider(value = 200, base = 10,min=2, max=2.8, step=0.01, conti
 LEFAC=FloatSlider(value = 6, min=0, max=10, step=0.05, continuous_update=False,description="LE Weight")
 TEFAC=FloatSlider(value = 2, min=0, max=10, step=0.05, continuous_update=False,description="TE Weight")
 KAPFAC=FloatSlider(value = 3, min=0, max=10, step=0.05, continuous_update=False,description="Crv Weight")
+REFTOPX0=FloatSlider(value = 1, min=0, max=1, step=0.01, continuous_update=False,description="Top Left")
+REFTOPX1=FloatSlider(value = 1, min=0, max=1, step=0.01, continuous_update=False,description="Top Right")
+REFBOTX0=FloatSlider(value = 1, min=0, max=1, step=0.01, continuous_update=False,description="Bot Left")
+REFBOTX1=FloatSlider(value = 1, min=0, max=1, step=0.01, continuous_update=False,description="Bot Right")
+REFVAL=FloatSlider(value = 1, min=1, max=5, step=0.01, continuous_update=False,description="Ref Weight")

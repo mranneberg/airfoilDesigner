@@ -27,85 +27,42 @@ Note, the above comments are irrelevant, arclength is now numerically evaluated.
 
 import numpy as np
 from scipy import interpolate as intp # Would be cool to get rid of
+import numba as nb
+from numba import jit,njit, f8,i8
 
-def deCastDivide(P01, P02,P03, P04,t0):
+
+@njit(nb.types.Tuple((f8[:,:],f8[:,:]))(f8[:,:],f8))
+def deCastDivide(P0,t0):
     # Divides a 4Point bezier into two 4 point beziers
     # Explicit deCasteljau
-    P11 = (1-t0)*P01 + t0*P02
-    P12 = (1-t0)*P02 + t0*P03
-    P13 = (1-t0)*P03 + t0*P04
+    P11 = (1-t0)*P0[0,:] + t0*P0[1,:]
+    P12 = (1-t0)*P0[1,:] + t0*P0[2,:]
+    P13 = (1-t0)*P0[2,:] + t0*P0[3,:]
     P21 = (1-t0)*P11 + t0*P12
     P22 = (1-t0)*P12 + t0*P13
     P31 = (1-t0)*P21 + t0*P22
+
+    P1 = P0.copy()
+    P2 = P0.copy()
+    P1[0] = P0[0,:]
+    P1[1] = P11
+    P1[2] = P21
+    P1[3] = P31 
+
+    P2[0] = P31
+    P2[1] = P22
+    P2[2] = P13
+    P2[3] = P0[3,:]
     
-    return ([P01,P11,P21,P31],[P31,P22,P13,P04])
+    return (P1,P2)
 
-def findArcLen(P0,P12,P3,S,t0):
-    t2 = t0
-    for k in range(50):
-        (s,dsdt2) = arclen(P0,P12,P3,t2)
-        if abs(s-S)<1e-10:
-            break
-        
-        if abs(dsdt2)<1e-5:
-            dsdt2 = 1
-        dt2 = -(s-S)/dsdt2
-        lam = min(1,min(0.1,abs((s-S)*10))/abs(dt2))
-        t2 += lam*dt2
+@njit(nb.types.Tuple((f8[:,:],f8[:,:],f8[:,:],f8[:,:]))(f8[:,:]))
+def bezierQuart(P):
+    (PP1,PP2) = deCastDivide(P,0.5)
+    (PP11,PP12) = deCastDivide(PP1,0.5)
+    (PP21,PP22) = deCastDivide(PP2,0.5)
+    return (PP11,PP12,PP21,PP22)
 
-    return t2
-
-def arclen(P0,P1,P2,t):
-    
-    DX2 = P2[0]-P1[0]
-    DX1 = P1[0]-P0[0]
-    DY2 = P2[1]-P1[1]
-    DY1 = P1[1]-P0[1]
-
-    c = DX1**2+DY1**2
-    b = DX1*(DX2 - DX1) + DY1*(DY2 - DY1)
-    a = (DX2 - DX1)**2+(DY2 - DY1)**2
-    if a<=0 or c+2*b*t+a*t**2<=0:
-        s = t*np.sqrt(c)
-        dsdt = np.sqrt(c)
-    elif (a*c-b**2)<=0:
-        s = ((t+b/a)*np.sqrt(c+2*b*t+a*t**2)) - ((b/a)*np.sqrt(c))
-        dsdt = np.sqrt(c+2*b*t+a*t**2) + (t+b/a)*0.5*(c+2*b*t+a*t**2)**(-0.5)*(2*b +2*a*t)
-    else:
-        s = ((t+b/a)*np.sqrt(c+2*b*t+a*t**2) + (a*c-b**2)/(a**1.5)*np.arcsinh((a*t+b)/(np.sqrt(a*c-b**2)))) \
-             - ((b/a)*np.sqrt(c) + (a*c-b**2)/(a**1.5)*np.arcsinh((b)/(np.sqrt(a*c-b**2))))
-        dsdt = np.sqrt(c+2*b*t+a*t**2) + (t+b/a)*0.5*(c+2*b*t+a*t**2)**(-0.5)*(2*b+2*a*t) \
-                    + (a*c-b**2)/(a**1.5)*(1+((a*t+b)/(np.sqrt(a*c-b**2)))**2)**(-0.5)*a
-
-    return (s,dsdt)
-
-def bezierPart(PP,depth):
-    depth -= 1
-    if depth == 0:
-        return PP
-    else:
-        (PP1, PP2) = deCastDivide(PP[0],PP[1],PP[2],PP[3],depth)
-        return [bezierPart(PP1,depth),bezierPart(PP2,depth)]
-
-
-def bezierQuart(P0,P1,P2,P3):
-    (PP1,PP2) = deCastDivide(P0,P1,P2,P3,0.5)
-    (PP11,PP12) = deCastDivide(PP1[0],PP1[1],PP1[2],PP1[3],0.5)
-    (PP21,PP22) = deCastDivide(PP2[0],PP2[1],PP2[2],PP2[3],0.5)
-    return [PP11,PP12,PP21,PP22]
-
-'''
-def bezierEight(P0,P1,P2,P3):
-    (PP1,PP2) = deCastDivide(P0,P1,P2,P3,0.5)
-    (PP11,PP12) = deCastDivide(PP1[0],PP1[1],PP1[2],PP1[3],0.5)
-    (PP21,PP22) = deCastDivide(PP2[0],PP2[1],PP2[2],PP2[3],0.5)
-    
-    (PP111,PP112) = deCastDivide(PP11[0],PP11[1],PP11[2],PP11[3],0.5)
-    (PP211,PP212) = deCastDivide(PP21[0],PP21[1],PP21[2],PP21[3],0.5)
-    (PP121,PP122) = deCastDivide(PP12[0],PP12[1],PP12[2],PP12[3],0.5)
-    (PP221,PP222) = deCastDivide(PP22[0],PP22[1],PP22[2],PP22[3],0.5)
-    return [PP111,PP112,PP121,PP122,PP211,PP212,PP221,PP222]
-'''
 
 def getLength(P):
     S = 0
@@ -113,8 +70,7 @@ def getLength(P):
     PP0 = []
     k=0
     for i in range(4):
-        PP0.append(bezierQuart(P[0+i*3,:],P[1+i*3,:],P[2+i*3,:],P[3+i*3,:]))
-        #PP0.append(bezierPart(P[i*3:i*3+4,:],2))
+        PP0.append(bezierQuart(P[i*3:i*3+4,:]))
         
     # Approximate "corners" by c2 bezier
     PP = PP0.copy()
@@ -136,33 +92,6 @@ def getLength(P):
             k+=1
     S = np.sum(dSarr)
     return (S,dSarr,PP)
-
-def arcLenNumeric(P0,P1,P2,P3,t):
-    # Bezier Differential
-    
-    # Simpson-Rule:
-    ts = np.arange(0,1.5,.5)*t
-    BDT = bezier4dt( P0, P1, P2, P3, ts)
-    for k in range(3):
-        BDT[0,k] = np.sqrt(BDT[0,k]**2+BDT[1,k]**2)
-    s = 1/6*(BDT[0,0]+4*BDT[0,1]+BDT[0,2])*t
-    return s
-    
-def findArcLenNumeric(P0,P1,P2,P3,S,t0):
-    t2 = t0
-    for k in range(50):
-        s = arcLenNumeric(P0,P1,P2,P3,t2)
-        dsdt2 = (arcLenNumeric(P0,P1,P2,P3,t2+1e-4)-arcLenNumeric(P0,P1,P2,P3,t2-1e-4))/2e-4
-        if abs(s-S)<1e-10:
-            break
-        
-        if abs(dsdt2)<1e-5:
-            dsdt2 = 1
-        dt2 = -(s-S)/dsdt2
-        lam = min(1,min(0.1,abs((s-S)*10))/abs(dt2))
-        t2 += dt2
-
-    return t2
 
 def pointsByArcLength(P,SU):
     # SU is 0->1 and is the length from bottom to top because i follow Melin.
@@ -213,14 +142,12 @@ def pointsByArcLength(P,SU):
         # Arclen by numeric integration
         ts = findArcLenNumeric(PP[j][0],PP[j][1],PP[j][2],PP[j][3],s-S0,ts)
         ts = min(ts,1.0)
-        
-        
-        p = bezier4(PP[j][0],PP[j][1],PP[j][2],PP[j][3],np.array(ts))
+        p = bezier4(PP[j][0],PP[j][1],PP[j][2],PP[j][3],np.zeros(1)+ts)
         if k>0:
             tprev = t[k-1]
         else:
-            tprev = np.array(0.0)
-        kappa[k] = maxBezierCurvature(PP[j][0],PP[j][1],PP[j][2],PP[j][3],tprev,np.array(ts))
+            tprev = 0.0#np.array(0.0)
+        kappa[k] = maxBezierCurvature(PP[j][0],PP[j][1],PP[j][2],PP[j][3],tprev,ts)
         
         points[0,k] = p[0]
         points[1,k] = p[1]
@@ -235,12 +162,14 @@ def pointsByArcLength(P,SU):
     
     return (t,points,kappa)
 
+@njit(f8[:,:](f8[:],f8[:],f8[:],f8[:],f8[:]))
 def bezier4( P0, P1, P2, P3, t):
     x = np.zeros((2,t.size))
     for k in range(2):
         x[k,:] = (1-t)**3*P0[k]+3*t*(1-t)**2*P1[k]+3*t**2*(1-t)*P2[k]+t**3*P3[k]
     return x
 
+@njit(f8[:,:](f8[:],f8[:],f8[:],f8[:],f8[:]))
 def bezier4dt( P0, P1, P2, P3, t):
     x = np.zeros((2,t.size))
     A0 = P1-P0
@@ -253,17 +182,69 @@ def bezier4dt( P0, P1, P2, P3, t):
         x[k,:] = 3*(A0[k]+2*t*D0[k]+t**2*E0[k])
     return x
 
-def point(P,N):
+@njit(f8(f8[:],f8[:],f8[:],f8[:],f8))
+def arcLenNumeric(P0,P1,P2,P3,t):
+    # Bezier Differential
     
-    t = 1.0/N*(np.arange(0,N+1))
+    # Simpson-Rule:
+    ts = np.arange(0,1.5,.5)*t
+    BDT = bezier4dt( P0, P1, P2, P3, ts)
+    for k in range(3):
+        BDT[0,k] = np.sqrt(BDT[0,k]**2+BDT[1,k]**2)
+    s = 1/6*(BDT[0,0]+4*BDT[0,1]+BDT[0,2])*t
+    return s
 
-    PB1=bezier4(P[0,:],P[1,:],P[2,:],P[3,:],t)
-    PB2=bezier4(P[3,:],P[4,:],P[5,:],P[6,:],t)
-    PT1=bezier4(P[6,:],P[7,:],P[8,:],P[9,:],t)
-    PT2=bezier4(P[9,:],P[10,:],P[11,:],P[12,:],t)
-    
-    return np.c_[PB1,PB2[:,1::],PT1[:,1::],PT2]
+@njit(f8(f8[:],f8[:],f8[:],f8[:],f8,f8))
+def findArcLenNumeric(P0,P1,P2,P3,S,t0):
+    t2 = t0
+    for k in range(50):
+        s = arcLenNumeric(P0,P1,P2,P3,t2)
+        dsdt2 = (arcLenNumeric(P0,P1,P2,P3,t2+1e-4)-arcLenNumeric(P0,P1,P2,P3,t2-1e-4))/2e-4
+        if abs(s-S)<1e-10:
+            break
+        
+        if abs(dsdt2)<1e-5:
+            dsdt2 = 1
+        dt2 = -(s-S)/dsdt2
+        lam = min(1,min(0.1,abs((s-S)*10))/abs(dt2))
+        t2 += dt2
 
+    return t2
+
+
+@njit(f8(f8[:],f8[:],f8[:],f8[:],f8))
+def bezierCurvature(P0,P1,P2,P3,t):
+    A0 = P1-P0
+    A1 = P2-P1
+    A2 = P3-P2
+    D0 = A1-A0
+    D1 = A2-A1
+    E0 = D1-D0
+    dCdt = np.zeros(2,dtype=np.float64)
+    #dCdt_dt = np.zeros(2)
+    d2Cd2t = np.zeros(2,dtype=np.float64)
+    #d2Cd2t_dt = np.zeros(2)
+
+    # k(t) = |C'xC''|/|C'|
+    for k in range(2):
+        dCdt[k] = 3*(A0[k]+2*t*D0[k]+t**2*E0[k])
+        #dCdt_dt[k] = 3*(2*D0[k]+2*t*E0[k])
+        d2Cd2t[k] = 6*(D0[k]+t*E0[k])
+        #d2Cd2t_dt[k] = 6*(E0[k])
+    # |C'|
+    abs_dCdt = np.sqrt(dCdt[0]**2+dCdt[1]**2)
+    #abs_dCdt_dt = 1/2/abs_dCdt*(2*dCdt_dt[0]+2*dCdt_dt[1])
+    # |C'xC''|
+    abs_cross = abs(dCdt[0]*d2Cd2t[1]-dCdt[1]*d2Cd2t[0])
+    #abs_cross_dt = np.sign(dCdt[0]*d2Cd2t[1]-dCdt[1]*d2Cd2t[0])*(dCdt_dt[0]*d2Cd2t[1]-dCdt_dt[1]*d2Cd2t[0] + dCdt[0]*d2Cd2t_dt[1]-dCdt[1]*d2Cd2t:dt[0])
+    kap = 0
+    #kap_dt = 0
+    if abs_dCdt>0:
+        kap = abs_cross/abs_dCdt**3
+        #kap_dt = abs_cross_dt/abs_dCdt**3 - 3*abs_cross_dt/abs_dCdt**4*abs_dCdt_dt
+    return kap
+
+@njit(f8(f8[:],f8[:],f8[:],f8[:],f8,f8))
 def maxBezierCurvature(P0,P1,P2,P3,t0,t1):
     # Return maximum curvature between t0 and t1
     #S ample three points, fit quadratic, and assume thats cool.
@@ -294,46 +275,8 @@ def maxBezierCurvature(P0,P1,P2,P3,t0,t1):
     else:
         return kap[0]    
         
-def bezierCurvature(P0,P1,P2,P3,t):
-    A0 = P1-P0
-    A1 = P2-P1
-    A2 = P3-P2
-    D0 = A1-A0
-    D1 = A2-A1
-    E0 = D1-D0
-    dCdt = np.zeros(2)
-    #dCdt_dt = np.zeros(2)
-    d2Cd2t = np.zeros(2)
-    #d2Cd2t_dt = np.zeros(2)
 
-    # k(t) = |C'xC''|/|C'|
-    for k in range(2):
-        dCdt[k] = 3*(A0[k]+2*t*D0[k]+t**2*E0[k])
-        #dCdt_dt[k] = 3*(2*D0[k]+2*t*E0[k])
-        d2Cd2t[k] = 6*(D0[k]+t*E0[k])
-        #d2Cd2t_dt[k] = 6*(E0[k])
-    # |C'|
-    abs_dCdt = np.sqrt(dCdt[0]**2+dCdt[1]**2)
-    #abs_dCdt_dt = 1/2/abs_dCdt*(2*dCdt_dt[0]+2*dCdt_dt[1])
-    # |C'xC''|
-    abs_cross = abs(dCdt[0]*d2Cd2t[1]-dCdt[1]*d2Cd2t[0])
-    #abs_cross_dt = np.sign(dCdt[0]*d2Cd2t[1]-dCdt[1]*d2Cd2t[0])*(dCdt_dt[0]*d2Cd2t[1]-dCdt_dt[1]*d2Cd2t[0] + dCdt[0]*d2Cd2t_dt[1]-dCdt[1]*d2Cd2t:dt[0])
-    kap = 0
-    #kap_dt = 0
-    if abs_dCdt>0:
-        kap = abs_cross/abs_dCdt**3
-        #kap_dt = abs_cross_dt/abs_dCdt**3 - 3*abs_cross_dt/abs_dCdt**4*abs_dCdt_dt
-    return kap
-
-
-def discreteCurvature(Points):
-    Curvature = np.zeros(Points.shape[1])
-    for k in range(1,Curvature.shape[0]-1):
-        Curvature[k] = localDiscreteCurvature(Points[:,k],Points[:,k-1],Points[:,k+1])
-    Curvature[0] = Curvature[1]
-    Curvature[-1] = Curvature[-2]
-    return Curvature
-
+@njit(f8(f8[:],f8[:],f8[:]))
 def localDiscreteCurvature(P,PM,PP):
     # Given a Point P and its neigbors PM an PP, calculate curvature
     # http://paulbourke.net/geometry/circlesphere/
@@ -356,6 +299,16 @@ def localDiscreteCurvature(P,PM,PP):
         kap = 0
         
     return kap
+
+@njit(f8[:](f8[:,:]))
+def discreteCurvature(Points):
+    Curvature = np.zeros(Points.shape[1])
+    for k in range(1,Curvature.shape[0]-1):
+        Curvature[k] = localDiscreteCurvature(Points[:,k],Points[:,k-1],Points[:,k+1])
+    Curvature[0] = Curvature[1]
+    Curvature[-1] = Curvature[-2]
+    return Curvature
+
 
 
 '''
@@ -385,21 +338,27 @@ $$ s[k+1] = s[k-1] + \gamma d(s[k+1])^{-1} $$
 Global problem for $\gamma$ after marching
 $$ s[N] = S_f$$
 '''
-
-def repanelArclength(S,Curvature,X,N,LEFAC,TEFAC,KAPFAC):
+#@jit(nb.types.Tuple((f8[:,:],f8[:]))(f8[:,:],i8,f8,f8,f8,f8[:],f8))
+def repanelArclength(X,N,LEFAC,TEFAC,KAPFAC,REFLIMS,REFVAL):
     # The Curvature is given at panels S.
+
+    Curvature = discreteCurvature(X)
     ND = len(Curvature)
-    # Density Function
+
+    S = np.zeros(ND)
+    for k in range(1,ND):
+        S[k] = S[k-1]+np.sqrt((X[0,k]-X[0,k-1])**2+(X[1,k]-X[1,k-1])**2)
 
     # Rough estimate on ds
     dsest = S[-1]/N
     
     PC = .5
 
-    DFUN = (1+KAPFAC*(Curvature**PC)/np.mean(Curvature**PC) + TEFAC**2*(1-np.fmin(3.0-3*X,1.0))**2 + LEFAC**2*(1-np.fmin(3*X,1.0))**2  )**-1
+    DFUN = (1 + KAPFAC*(Curvature**PC)/np.mean(Curvature**PC) + TEFAC**2*(1-np.fmin(3*(1.0-X[0,:]),1.0))**2 + LEFAC**2*(1-np.fmin(3*X[0,:],1.0))**2  )**-1
     DFUNN = DFUN.copy()
     
-    WINDOW = 50
+    # This should be roughly 50 for 1000 points, or 5%
+    WINDOW = int(0.05*ND)
     for k in range(ND):
         NQ = 3
         DFUNN[k] = DFUN[k]**NQ
@@ -408,15 +367,29 @@ def repanelArclength(S,Curvature,X,N,LEFAC,TEFAC,KAPFAC):
             kmj = (k-j)%ND # Incidentally, this leads to similar TE distances on top and bottom
             DFUNN[k] += (DFUN[kpj]**NQ+DFUN[kmj]**NQ)
         DFUNN[k] = (DFUNN[k])**(1.0/NQ)/(2*WINDOW+1)
+
+    up = True
+    minx = np.argmin(X[0,:])
+    for k in range(ND):
+        if up:
+            if X[0,k]<=REFLIMS[1] and X[0,k]>=REFLIMS[0]:
+                DFUNN[k]/=REFVAL
+            if k>=minx:
+                up = False
+        else:
+            if X[0,k]>=REFLIMS[2] and X[0,k]<=REFLIMS[3]:
+                DFUNN[k]/=REFVAL
+    
+    DFUNN = DFUNN/np.mean(DFUNN)
     
     # We look for a scaling factor \gamma
-    IT = intp.InterpolatedUnivariateSpline(S, DFUNN, k=1,ext=3)
+    IT = intp.InterpolatedUnivariateSpline(S, DFUNN, k=3,ext=3)
     gamma = dsest/np.mean(DFUNN) # dS=gamma*DFUNN(f)->gamma~ds/gamma 
     
     # Once up.
     converged = 0
     SR = np.zeros(N)
-    for it in range(100):
+    for it in range(200):
         SEND_GAM = 0
         for k in range(1,N):
             DS = IT(SR[k-1])
@@ -432,7 +405,7 @@ def repanelArclength(S,Curvature,X,N,LEFAC,TEFAC,KAPFAC):
         if abs(dGam)<1e-6:
             converged+=1
             break
-        lam = min(1,0.1/(abs(dGam)/abs(gamma)))
+        lam = min(1,0.05/(abs(dGam)/abs(gamma)))
         gamma += lam*dGam
         if abs(SR[-1]-S[-1])<=1e-6:
             converged+=1
@@ -464,9 +437,17 @@ def repanelArclength(S,Curvature,X,N,LEFAC,TEFAC,KAPFAC):
             break
         
     # Mean of up and down.
-    if converged<2:
-        print("Not Converged"+str(converged))
+    #if converged<2:
+        #print("Not Converged"+str(converged))
+    #    return -1
     
     SR = (SR+SRUP)*0.5
+
+    # Interpolate ArcPoints to new
+    XN = np.zeros((2,int(N)))
+    s = intp.InterpolatedUnivariateSpline(S,X[0,:], k=3)
+    XN[0,:] = s(SR)
+    s = intp.InterpolatedUnivariateSpline(S,X[1,:], k=3)
+    XN[1,:] = s(SR)
     
-    return SR
+    return (XN,SR)
