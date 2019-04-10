@@ -1,8 +1,6 @@
 # Use viiflow to calculate a polar
 import viiflow as vf
 import numpy as np
-import os
-os.environ["OMP_NUM_THREADS"] = "1"
 
 def viiflowPolar(X,aoarange,RE=1e6,ncrit=9.0,Mach=0.0):
     # Settings
