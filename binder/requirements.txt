@@ -1,4 +1,0 @@
-scipy
-numba
-http://viiflow.com/wp-content/uploads/vf-versions/viiflow-1.2-cp37-cp37m-linux_x86_64.whl
-http://viiflow.com/wp-content/uploads/vf-versions/viiflowtools-1.1-py3-none-any.whl

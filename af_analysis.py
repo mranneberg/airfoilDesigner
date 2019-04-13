@@ -4,7 +4,6 @@ import numpy as np
 
 def viiflowPolar(X,aoarange,RE=1e6,ncrit=9.0,Mach=0.0):
     # Settings
-    Mach = 0.0
     s = vf.setup(Re=RE,Ma=Mach,ncrit=ncrit,alpha=aoarange[0])
     # Internal iterations
     s.itermax = 100
