@@ -4,7 +4,7 @@ import numpy as np
 # Import some widgets
 import ipywidgets as widgets
 from ipywidgets import interactive, interact
-from ipywidgets import FloatSlider
+from ipywidgets import FloatSlider, Button
 
 def bezierPlot(P):
     plt.plot([P[0,0],P[1,0]],[P[0,1],P[1,1]],"o-",color="#AAAAAA")
