@@ -67,23 +67,10 @@ def bezierQuart(P):
 def getLength(P):
     S = 0
     dSarr = np.zeros(2*16)
-    PP0 = []
+    PP = []
     k=0
     for i in range(4):
-        PP0.append(bezierQuart(P[i*3:i*3+4,:]))
-        
-    # Approximate "corners" by c2 bezier
-    PP = PP0.copy()
-    for i in range(4):
-        if i<3:
-            L0 = PP0[i][-1][2]-PP0[i][-1][3]
-            L1 = -(PP0[i+1][0][1]-PP0[i+1][0][0])
-            PP[i][-1][2] = 0.5*(L0+L1)+PP0[i][-1][3]
-            
-        if i>0:
-            L0 = PP0[i][0][1]-PP0[i][0][0]
-            L1 = -(PP0[i-1][-1][2]-PP0[i-1][-1][3])
-            PP[i][0][1] = 0.5*(L0+L1)+PP0[i][0][0]
+        PP.append(bezierQuart(P[i*3:i*3+4,:]))
         
     for i in range(4):
         for j in range(len(PP[i])):
