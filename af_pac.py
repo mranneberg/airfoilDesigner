@@ -13,7 +13,7 @@ def B64write(k):
     str64 = """ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"""
     str=''
     for i in range(15):
-        str += str64[int(k[i]*63)]
+        str += str64[int(round(k[i]*63))]
     return str
 
 

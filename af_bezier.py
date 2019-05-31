@@ -297,7 +297,6 @@ def discreteCurvature(Points):
     return Curvature
 
 
-
 '''
 ## How to discretize
 Aims: 
@@ -371,6 +370,7 @@ def repanelArclength(X,N,LEFAC,TEFAC,KAPFAC,REFLIMS,REFVAL):
     
     # We look for a scaling factor \gamma
     IT = intp.InterpolatedUnivariateSpline(S, DFUNN, k=3,ext=3)
+    #IT = lambda s: np.interp(s,S,DFUNN)
     gamma = dsest/np.mean(DFUNN) # dS=gamma*DFUNN(f)->gamma~ds/gamma 
     
     # Once up.
@@ -433,8 +433,10 @@ def repanelArclength(X,N,LEFAC,TEFAC,KAPFAC,REFLIMS,REFVAL):
     # Interpolate ArcPoints to new
     XN = np.zeros((2,int(N)))
     s = intp.InterpolatedUnivariateSpline(S,X[0,:], k=3)
+    #s = lambda s: np.interp(s,S,X[0,:])
     XN[0,:] = s(SR)
     s = intp.InterpolatedUnivariateSpline(S,X[1,:], k=3)
+    #s = lambda s: np.interp(s,S,X[1,:])
     XN[1,:] = s(SR)
     
     return (XN,SR)
