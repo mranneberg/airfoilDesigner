@@ -49,9 +49,9 @@ def savePoints(filename,X,name):
 
 # These Parameters define the discretization
 N=widgets.FloatLogSlider(value = 200, base = 10,min=2, max=2.8, step=0.01, continuous_update=False,description="Nodes")
-LEFAC=FloatSlider(value = 6, min=0, max=10, step=0.05, continuous_update=False,description="LE Weight")
-TEFAC=FloatSlider(value = 2, min=0, max=10, step=0.05, continuous_update=False,description="TE Weight")
-KAPFAC=FloatSlider(value = 3, min=0, max=10, step=0.05, continuous_update=False,description="Crv Weight")
+LEFAC=FloatSlider(value = 2, min=0, max=10, step=0.05, continuous_update=False,description="LE Weight")
+TEFAC=FloatSlider(value = 1, min=0, max=10, step=0.05, continuous_update=False,description="TE Weight")
+KAPFAC=FloatSlider(value = 1, min=0, max=10, step=0.05, continuous_update=False,description="Crv Weight")
 REFTOPX0=FloatSlider(value = 1, min=0, max=1, step=0.01, continuous_update=False,description="Top Left")
 REFTOPX1=FloatSlider(value = 1, min=0, max=1, step=0.01, continuous_update=False,description="Top Right")
 REFBOTX0=FloatSlider(value = 1, min=0, max=1, step=0.01, continuous_update=False,description="Bot Left")

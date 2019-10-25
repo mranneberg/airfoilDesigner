@@ -35,7 +35,6 @@ def viiflowPolar(X,aoarange,RE=1e6,ncrit=9.0,Mach=0.0,GFheight = 0.0):
 
             # Set current alpha and set res/grad to None to tell viiflow that they are not valid
             s.alpha = alpha
-
             if init:
                 (p,bl,x) = vf.init(X,s)
                 x[p.foils[0].N::p.foils[0].N+p.wakes[0].N-1]+=vd[-1]
