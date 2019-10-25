@@ -26,7 +26,6 @@ Note, the above comments are irrelevant, arclength is now numerically evaluated.
 
 
 import numpy as np
-from scipy import interpolate as intp # Would be cool to get rid of
 import numba as nb
 from numba import jit,njit, f8,i8
 
