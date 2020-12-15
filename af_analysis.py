@@ -4,10 +4,10 @@ import numpy as np
 
 def viiflowPolar(X,aoarange,RE=1e6,ncrit=9.0,Mach=0.0,GFheight = 0.0):
     # Settings
-    s = vf.setup(Re=RE,Ma=Mach,ncrit=ncrit,alpha=aoarange[0])
+    s = vf.setup(Re=RE,Ma=Mach,Ncrit=ncrit,Alpha=aoarange[0])
     # Internal iterations
-    s.itermax = 100
-    s.silent=True
+    s.Itermax = 100
+    s.Silent=True
     # I will put the results here
     alv = []
     clv = []
@@ -34,7 +34,7 @@ def viiflowPolar(X,aoarange,RE=1e6,ncrit=9.0,Mach=0.0,GFheight = 0.0):
         for alpha in aoar:
 
             # Set current alpha and set res/grad to None to tell viiflow that they are not valid
-            s.alpha = alpha
+            s.Alpha = alpha
             if init:
                 (p,bl,x) = vf.init(X,s)
                 x[p.foils[0].N::p.foils[0].N+p.wakes[0].N-1]+=vd[-1]
