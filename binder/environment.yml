@@ -2,12 +2,11 @@ name: test-env
 channels:
   - conda-forge
 dependencies:
-- python=3.6
+- python=3.8
 - numba
 - scipy
 - pip
 - appmode
-- dataclasses
 - pip:
-  - http://viiflow.com/wp-content/uploads/vf-versions/viiflow-1.6-cp36-cp36m-linux_x86_64.whl
-  - http://viiflow.com/wp-content/uploads/vf-versions/viiflowtools-1.6-py3-none-any.whl
+  - http://viiflow.com/wp-content/uploads/vf-versions/viiflow-1.7-cp38-cp38m-linux_x86_64.whl
+  - http://viiflow.com/wp-content/uploads/vf-versions/viiflowtools-1.6.1-py3-none-any.whl
