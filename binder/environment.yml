@@ -8,5 +8,5 @@ dependencies:
 - pip
 - appmode
 - pip:
-  - http://viiflow.com/wp-content/uploads/vf-versions/viiflow-1.8.2.1-cp38-cp38-linux_x86_64.shl
+  - http://viiflow.com/wp-content/uploads/vf-versions/viiflow-1.8.2.1-cp38-cp38-linux_x86_64.whl
   - http://viiflow.com/wp-content/uploads/vf-versions/viiflowtools-1.7.2-py3-none-any.whl
